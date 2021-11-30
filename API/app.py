@@ -14,7 +14,7 @@ pickle_in = open('../models/model_classifier.pkl','rb')
 classifier=pickle.load(pickle_in)
 
 # load data
-df_data = pd.read_csv("../data_train.csv")
+df_data = pd.read_csv("../X_test.csv")
 df_data = df_data.drop(columns=['TARGET'])
 
 threshold_optimized = 0.318
