@@ -1,5 +1,6 @@
 # Library imports
 import uvicorn
+import gunicorn
 from fastapi import FastAPI
 from pydantic import BaseModel
 import numpy as np
