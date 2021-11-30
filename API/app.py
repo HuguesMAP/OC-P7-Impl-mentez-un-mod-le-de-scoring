@@ -14,7 +14,7 @@ app = FastAPI()
 # classifier=pickle.load(pickle_in)
 
 # load data
-df_data = pd.read_csv("../X_test.csv")
+df_data = pd.read_csv("X_test.csv")
 #df_data = df_data.drop(columns=['TARGET'])
 
 threshold_optimized = 0.318
