@@ -8,14 +8,16 @@ import pickle
 import pandas as pd
 from imblearn.pipeline import Pipeline as imbpipeline
 
-     
+
 # Create app and model objects
 app = FastAPI()
+
 pickle_in = open('../models/model_classifier.pkl','rb')
 classifier=pickle.load(pickle_in)
 
 # load data
 df_data = pd.read_csv("../X_test.csv")
+# if data loaded has the TARGET column
 #df_data = df_data.drop(columns=['TARGET'])
 
 threshold_optimized = 0.318
