@@ -22,8 +22,13 @@ df_data = pd.read_csv("X_test.csv")
 
 threshold_optimized = 0.318
 
+@app.get("/")
+async def root():
+    return {"message": "Welcome on my API"}
+
 @app.get('/{customerID}')
 def prediction(customerID: int):
+
     if customerID in df_data['SK_ID_CURR'].values:
     
         # select datas of the customer
