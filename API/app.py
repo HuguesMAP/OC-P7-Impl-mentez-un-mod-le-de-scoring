@@ -10,7 +10,7 @@ import pandas as pd
      
 # Create app and model objects
 app = FastAPI()
-pickle_in = open('/models/model_classifier.pkl','rb')
+pickle_in = open('models/model_classifier.pkl','rb')
 classifier=pickle.load(pickle_in)
 
 # load data
