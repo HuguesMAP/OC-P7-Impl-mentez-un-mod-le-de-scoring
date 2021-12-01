@@ -6,6 +6,7 @@ from pydantic import BaseModel
 import numpy as np
 import pickle
 import pandas as pd
+from imblearn.pipeline import Pipeline as imbpipeline
 
      
 # Create app and model objects
