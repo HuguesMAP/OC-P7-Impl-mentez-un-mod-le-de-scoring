@@ -1,3 +1,5 @@
+# To load locally : uvicorn API.app:app --reload
+
 # Library imports
 import uvicorn
 import gunicorn
@@ -16,7 +18,7 @@ pickle_in = open('models/model_classifier.pkl','rb')
 classifier=pickle.load(pickle_in)
 
 # load data
-df_data = pd.read_csv("X_test.csv")
+df_data = pd.read_csv("X_test.csv", index_col='SK_ID_CURR')
 # if data loaded has the TARGET column
 #df_data = df_data.drop(columns=['TARGET'])
 
@@ -29,10 +31,10 @@ async def root():
 @app.get('/{customerID}')
 def prediction(customerID: int):
 
-    if customerID in df_data['SK_ID_CURR'].values:
+    if customerID in df_data.index.values:
     
         # select datas of the customer
-        customer_data = df_data[df_data['SK_ID_CURR']==customerID]
+        customer_data = df_data.loc[[customerID]]
 
         # calculate the probability with the model for the customer selected
         predict_proba = classifier.predict_proba(customer_data.values.reshape(1,-1))
