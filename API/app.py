@@ -18,11 +18,12 @@ pickle_in = open('models/model_classifier.pkl','rb')
 classifier=pickle.load(pickle_in)
 
 # load data
-df_data = pd.read_csv("X_test.csv", index_col='SK_ID_CURR')
+df_data = pd.read_csv("datas/X_sample_preproc.csv", index_col='SK_ID_CURR')
 # if data loaded has the TARGET column
 #df_data = df_data.drop(columns=['TARGET'])
 
-threshold_optimized = 0.318
+# thershold optimized for custom score
+threshold_optimized = 0.320
 
 @app.get("/")
 async def root():
@@ -31,6 +32,7 @@ async def root():
 @app.get('/{customerID}')
 def prediction(customerID: int):
 
+    # check if the customerID selected is in the list
     if customerID in df_data.index.values:
     
         # select datas of the customer
