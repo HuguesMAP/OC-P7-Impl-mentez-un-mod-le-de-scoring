@@ -8,11 +8,16 @@ import requests
 from imblearn.pipeline import Pipeline as imbpipeline
 import shap
 import matplotlib.pyplot as plt
+from PIL import Image
 
+# force display to wide
+st.set_page_config(layout="wide")
 
 # load datas
 df_data = pd.read_csv('datas/X_sample.csv', index_col='SK_ID_CURR')
 df_data_preproc = pd.read_csv('datas/X_sample_preproc.csv', index_col='SK_ID_CURR')
+
+features = list(df_data.columns)
 
 # load model
 pickle_in_cl = open('models/model_classifier.pkl','rb')
@@ -22,6 +27,11 @@ classifier=pickle.load(pickle_in_cl)
 pickle_in_exp = open('explainer/explainer.pkl','rb')
 explainer=pickle.load(pickle_in_exp)
 
+# load logo
+logo = Image.open('datas./logo.png')
+
+
+
 # plot the force plot in streamlit in API
 def st_shap(plot, height=None):
     shap_html = f"<head>{shap.getjs()}</head><body>{plot.html()}</body>"
@@ -29,63 +39,60 @@ def st_shap(plot, height=None):
 
 shap_values = explainer(df_data_preproc)
 
+# display title
+st.markdown("<h1 style='text-align: center; color: black;'>Prêt à dépenser customer dashboard<p></p></h1>", unsafe_allow_html=True)
+
+#diplay logo
+st.sidebar.image(logo)
 
 
 # selectbox with customersID
-option = st.sidebar.selectbox(
-    'Please select a CustomerID'
-    ,
+customerid = st.sidebar.selectbox(
+    'Please select a CustomerID',
      df_data.index.tolist(),0)
 
+customer_row = df_data.index.get_loc(customerid)
+
 # load data of the customer selected
-customer_data = df_data.loc[[option]]
+customer_data = df_data.loc[[customerid]]
+customer_data_preproc = df_data_preproc.loc[[customerid]]
+
 
 
 # create differents checkbox to display different types of datas
 cbx_csdata = st.sidebar.checkbox('Customer datas')
-cbx_proba = st.sidebar.checkbox('Customer probability')
+cbx_proba = st.sidebar.checkbox('Customer prediction')
+cbx_compare = st.sidebar.checkbox('Customer compare')
 
+# display customerID
+st.write('Customer selected :', customerid)
 
 # display datas linked to checkbox cbx_csdata
 if cbx_csdata:
-    st.dataframe(customer_data)
+    
+    st.write("""
+    # Customer datas :
+    """)
+    
+    feature_selection = st.multiselect(
+        'Select features to display', features, features[:10])
+    
+    st.dataframe(customer_data[feature_selection])
 
 # display datas linked to checkbox cbx_proba
 if cbx_proba:
     
     st.write("""
-    # From streamlit directly
+    # Customer prediction :
     """)
-    predict_proba = classifier.predict_proba(customer_data.values.reshape(1,-1))
-    predict_proba = predict_proba[:, 1][0]
-
-    st.write('Probability of default : ', predict_proba)
-
-
-    st.write("""
-    # From FlaskAPI
-    """)
-
-    # from the flask api
-    response = requests.get("https://ocp7implementezunmodele.herokuapp.com/"+ str(option))
-    st.write(response.json())
-    data_table1 = pd.DataFrame([response.json()])
-    st.dataframe(data_table1)
-    st.write('Probability of default : ', data_table1['Probability'][0])
     
-    
-    customer_row = df_data.index.get_loc(option)
-    
+    st.write('Predict : ', df_data.loc[customerid]['prediction'])
+    st.write('Probability of default : ', round(df_data.loc[customerid]['probability']*100,2), '%')
+           
     
     # visualize the first prediction's explanation (use matplotlib=True to avoid Javascript)
     st_shap(shap.force_plot(shap_values[customer_row]))
 
-
-    
-    st.pyplot(shap.force_plot(shap_values[customer_row],matplotlib=True,show=False
-                     ,figsize=(15,3)), bbox_inches='tight',dpi=300,pad_inches=0)
-    plt.clf()
-    
     
     fig, ax = plt.subplots(nrows=1, ncols=1)
     shap.summary_plot(shap_values)
