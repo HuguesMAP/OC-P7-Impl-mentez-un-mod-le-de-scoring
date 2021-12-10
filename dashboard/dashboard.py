@@ -11,6 +11,7 @@ from imblearn.pipeline import Pipeline as imbpipeline
 import shap
 import matplotlib.pyplot as plt
 from PIL import Image
+import plotly.graph_objects as go
 
 # load datas
 # data of the customers
@@ -95,16 +96,40 @@ if not cbx_data and not cbx_proba and not cbx_compare:
 if cbx_proba:
     st.markdown("<h2 style='text-align: left; color: black;'>Customer prediction :</h2>", unsafe_allow_html=True)
 
-    st.markdown('CustomerID selected : **'+ str(customerid) + '**')
+    st.markdown('CustomerID selected : **'+ str(customerid) + '**')  
+    
+    # use plotly to display a gauge for probability of the customer
+    fig = go.Figure(go.Indicator(
+         mode = "gauge+number",
+            value = round(df_data.loc[customerid]['probability']*100,2),
+            title = {'text': "Default probability"},
+
+            domain = {'x': [0, 1], 'y': [0, 1]},
+            gauge = {'axis': {'range': [None, 100]},'bar': {'color': "blue"},
+                     'threshold' : {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': threshold_optimized*100}}))
+    # define size of the display
+    fig.update_layout(
+            autosize=False,
+            width=150,
+            height=150,
+            margin=dict(
+                l=0,
+                r=0,
+                b=5,
+                t=40,
+                pad=5))
+
+    st.plotly_chart(fig, use_container_width=True)
     
     if df_data.loc[customerid]['prediction'] == 1:
         customer_status = 'default of repayment 🔴'
     else:
         customer_status = 'non default of repayment 🟢'
     
-    st.markdown('For this customer the prediction is : ' + customer_status + ' with a default probability of ' + str(round(df_data.loc[customerid]['probability']*100,2)) + '% (with threshold at : ' + str(threshold_optimized*100) + '%)')
+    # display probability and prediction for customer selected
+    st.markdown('For this customer the prediction is : ' + customer_status + ' with a default probability at ' + str(round(df_data.loc[customerid]['probability']*100,2)) + '% (with threshold at : ' + str(threshold_optimized*100) + '%)')
     
-    
+    # display graph from shap for customer selected
     col1, col2= st.columns(2)
     
     with col1:
@@ -130,48 +155,67 @@ if cbx_proba:
 
 # display datas linked to checkbox cbx_proba
 if cbx_data:    
+    st.markdown("<h2 style='text-align: left; color: black;'>Customer data :</h2>", unsafe_allow_html=True)
     
+    # use a multiselection to select features to display
     feature_selection = st.multiselect(
         'Select features to display', features, features[:10])
     
+    # transpose dataframe in vertical for a better view
+    customer_data_transposed = customer_data[feature_selection].reset_index().transpose()
+    # display datas of the customer
+    st.table(customer_data_transposed.round(2).rename(columns={0: "Value"}).astype('string'))
     
-    #st.dataframe(customer_data[feature_selection])
-    test = customer_data[feature_selection].reset_index().transpose()
-    st.dataframe(test.rename(columns={0: "Value"}).astype('string'))
-    st.table(test.rename(columns={0: "Value"}).astype('string'))
+    # display number of missing values
+    nb_missing_values = sum(customer_data.isnull().values.any(axis=0))
+    percentage_nb_missing_values =  nb_missing_values/customer_data.shape[1]
+    st.markdown("There's : " + str(nb_missing_values) + " missing values (" + str(round(percentage_nb_missing_values*100,2)) + "%).")
+    
+    # if there's missing values propose to display them
+    if nb_missing_values > 0:
+        cbx_missing_val = st.checkbox('Display list of missing value')
+        
+    if cbx_missing_val:    
+        st.markdown(customer_data.columns[customer_data.isnull().any()].to_list())
 
-    chaine = 'Prédiction : **' + str(customerid) +  '** avec **' + str(df_data.loc[customerid]['prediction']) + '%** de risque de défaut (classe réelle : '+ str(round(df_data.loc[customerid]['probability']*100,2)) + ')'
+# display datas linked to checkbox cbx_compare
+if cbx_compare:
+    st.markdown("<h2 style='text-align: left; color: black;'>Customer compare :</h2>", unsafe_allow_html=True)
+      
+    # use a multiselection to select features to display
+    feature_selection = st.multiselect(
+        'Select features to compare', features, features[:6])    
     
-
-
-    st.write("""
-    # Customer prediction :
-    """)
-    
-    st.write('Predict : ', df_data.loc[customerid]['prediction'])
-    st.write('Probability of default : ', round(df_data.loc[customerid]['probability']*100,2), '%')
-           
-    
-    # visualize the first prediction's explanation (use matplotlib=True to avoid Javascript)
-    st_shap(shap.force_plot(shap_values[customer_row]))
+    # create a data frame with datas of customer and data for customer with default and customer non default
+    df_compare = pd.concat([customer_data, df_mean_mode]).iloc[:, :-1].rename(index={0:"Non-default", 1:"Default", customerid:"Customer"})
 
     
-    fig, ax = plt.subplots(nrows=1, ncols=1)
-    shap.summary_plot(shap_values)
-    st.pyplot(fig)
-    
-    fig, ax = plt.subplots(nrows=1, ncols=1)
-    shap.plots.waterfall(shap_values[customer_row])
-    st.pyplot(fig)
-    
-    col1, col2= st.columns([1,1])
+   
 
-    with col1:
-        fig, ax = plt.subplots(nrows=1, ncols=1)
-        shap.summary_plot(shap_values)
+    
+ncol = st.sidebar.number_input("Number of dynamic columns", 0, 20, 1)
+cols = st.columns(ncol)
+
+for i, x in enumerate(cols):
+    st.write(i)
+    fig = plt.figure(figsize=(3,4))
+    sns.barplot(x=df_compare.index, y='AMT_CREDIT', data=df_compare)
+    plt.title('AMT_CREDIT')
+    x.pyplot(fig)
+
+st.table(df_compare[feature_selection].round(2).transpose().astype('string')) 
+
+
+st.title("Let's create a table!")
+j=0
+cols = st.columns(5)
+for i in range(1, 10):
+    with cols[j]:
+        fig = plt.figure(figsize=(3,4))
+        sns.barplot(x=df_compare.index, y='AMT_CREDIT', data=df_compare)
+        plt.title('AMT_CREDIT')
         st.pyplot(fig)
-    with col2:
-        fig, ax = plt.subplots(nrows=1, ncols=1)
-        shap.plots.waterfall(shap_values[customer_row])
-        st.pyplot(fig)
-    
+    if j>3:
+        j=0
+    else:
+        j=j+1
