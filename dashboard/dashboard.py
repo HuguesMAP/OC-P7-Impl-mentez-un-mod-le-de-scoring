@@ -209,7 +209,7 @@ if cbx_data:
         cbx_missing_val = st.checkbox('Display list of missing value')
         
     if cbx_missing_val:    
-        st.markdown(customer_data.columns[customer_data.isnull().any()].to_list())
+        st.table(pd.DataFrame(customer_data.columns[customer_data.isnull().any()].to_list()).rename(columns={0: "Feature"}))
 
         
 ########################################################################################################################################       
@@ -221,9 +221,11 @@ if cbx_compare:
     # create a data frame with datas of customer and data for customer with default and customer non default
     df_compare = pd.concat([customer_data, df_mean_mode]).iloc[:, :-1].rename(index={0:"Non-default", 1:"Default", customerid:"Customer"})
     
-        # use a multiselection to select features to compare
+    nb_feature_to_compare = st.slider('Select a number of features to compare', 0, df_compare.shape[1], 6)
+    
+    # use a multiselection to select features to compare
     feature_selection = st.multiselect(
-        'Select features to compare', features, features[:6])    
+        'Select features to compare', features, features[:nb_feature_to_compare])    
     
     # Display features selected to compare in a number of columns
     nb_columns = 4
@@ -252,3 +254,5 @@ if cbx_compare:
     # display a table of the features selected to compare        
     st.markdown("<h6 style='text-align: left; color: black;'><u>Table of data</u></h6>", unsafe_allow_html=True)
     st.table(df_compare[feature_selection].round(2).transpose().astype('string')) 
+    
+   
