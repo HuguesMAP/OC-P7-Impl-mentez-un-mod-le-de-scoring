@@ -36,6 +36,8 @@ shap_values=pickle.load(pickle_shap_values)
 # load logo
 logo = Image.open('datas./logo.png')
 
+######################################################################################################################################## 
+
 # thershold optimized for custom score
 threshold_optimized = 0.320
 
@@ -76,6 +78,8 @@ cbx_data = st.sidebar.checkbox('Customer data')
 cbx_compare = st.sidebar.checkbox('Customer compare')
 
 
+######################################################################################################################################## 
+
 
 # display information how to use dashboard if no checkbox selected
 if not cbx_data and not cbx_proba and not cbx_compare:
@@ -90,7 +94,10 @@ if not cbx_data and not cbx_proba and not cbx_compare:
     st.markdown("<ul><li><h6 style='text-align: left; color: black;'>Customer data :</li></h4><ul style='list-style-type:none;'><li>Display descriptive information of the customer selected.</li></ul></ul>", unsafe_allow_html=True)
 
     st.markdown("<ul><li><h6 style='text-align: left; color: black;'>Customer compare :</li></h4><ul style='list-style-type:none;'><li>Compare the customer selected with other customers.</li></ul></ul>", unsafe_allow_html=True)    
+
     
+######################################################################################################################################## 
+
 
 # display datas linked to checkbox cbx_csdata
 if cbx_proba:
@@ -102,7 +109,7 @@ if cbx_proba:
     fig = go.Figure(go.Indicator(
          mode = "gauge+number",
             value = round(df_data.loc[customerid]['probability']*100,2),
-            title = {'text': "Default probability"},
+            title = {'text': "Default probability (%)"},
 
             domain = {'x': [0, 1], 'y': [0, 1]},
             gauge = {'axis': {'range': [None, 100]},'bar': {'color': "blue"},
@@ -151,7 +158,10 @@ if cbx_proba:
         st.markdown("<ul><li>Feature importance: Variables are ranked in descending order.</li></ul>", unsafe_allow_html=True)
         st.markdown("<ul><li>Impact: The horizontal location shows whether the effect of that value is associated with a higher or lower prediction.</li></ul>", unsafe_allow_html=True)        
         st.markdown("<ul><li>Original value: Color shows whether that variable is high (in red) or low (in blue) for that observation.</li></ul>", unsafe_allow_html=True)   
+
         
+########################################################################################################################################     
+
 
 # display datas linked to checkbox cbx_proba
 if cbx_data:    
@@ -169,53 +179,76 @@ if cbx_data:
     # display number of missing values
     nb_missing_values = sum(customer_data.isnull().values.any(axis=0))
     percentage_nb_missing_values =  nb_missing_values/customer_data.shape[1]
+    
+    # use plotly to display a gauge for Missing values
+    fig = go.Figure(go.Indicator(
+         mode = "gauge+number",
+            value = round(percentage_nb_missing_values*100,2),
+            title = {'text': "Missing values (%)"},
+
+            domain = {'x': [0, 1], 'y': [0, 1]},
+            gauge = {'axis': {'range': [None, 100]},'bar': {'color': "blue"}}))
+    # define size of the display
+    fig.update_layout(
+            autosize=False,
+            width=150,
+            height=150,
+            margin=dict(
+                l=0,
+                r=0,
+                b=5,
+                t=40,
+                pad=5))
+
+    st.plotly_chart(fig, use_container_width=True)  
+    
     st.markdown("There's : " + str(nb_missing_values) + " missing values (" + str(round(percentage_nb_missing_values*100,2)) + "%).")
     
-    # if there's missing values propose to display them
+    # if there's missing values propose to display them with a checkbox
     if nb_missing_values > 0:
         cbx_missing_val = st.checkbox('Display list of missing value')
         
     if cbx_missing_val:    
         st.markdown(customer_data.columns[customer_data.isnull().any()].to_list())
 
+        
+########################################################################################################################################       
+        
 # display datas linked to checkbox cbx_compare
 if cbx_compare:
     st.markdown("<h2 style='text-align: left; color: black;'>Customer compare :</h2>", unsafe_allow_html=True)
-      
-    # use a multiselection to select features to display
+    st.markdown("Compare the data of the customer with the data of the customers predicted with a default of repayment and with customers predicted with a non default of repayment")
+    # create a data frame with datas of customer and data for customer with default and customer non default
+    df_compare = pd.concat([customer_data, df_mean_mode]).iloc[:, :-1].rename(index={0:"Non-default", 1:"Default", customerid:"Customer"})
+    
+        # use a multiselection to select features to compare
     feature_selection = st.multiselect(
         'Select features to compare', features, features[:6])    
     
-    # create a data frame with datas of customer and data for customer with default and customer non default
-    df_compare = pd.concat([customer_data, df_mean_mode]).iloc[:, :-1].rename(index={0:"Non-default", 1:"Default", customerid:"Customer"})
-
+    # Display features selected to compare in a number of columns
+    nb_columns = 4
+    cols = st.columns(nb_columns)
     
-   
+    # use to create a new line
+    j=0    
+    for i in feature_selection:
+        with cols[j]:
+            # if feature is an object display in a table
+            if df_compare[i].dtype=='object':
+                st.table(df_compare[i])
+            # if feature is not an object display in a barplot
+            else:
+                fig = plt.figure(figsize=(3,1.5))
+                sns.barplot(y=df_compare.index, x=i, data=df_compare)
+                plt.xlabel(None)
+                plt.title(i)
+                st.pyplot(fig)            
+        if j>nb_columns-2:
+            j=0
+            st.markdown('')
+        else:
+            j=j+1
 
-    
-ncol = st.sidebar.number_input("Number of dynamic columns", 0, 20, 1)
-cols = st.columns(ncol)
-
-for i, x in enumerate(cols):
-    st.write(i)
-    fig = plt.figure(figsize=(3,4))
-    sns.barplot(x=df_compare.index, y='AMT_CREDIT', data=df_compare)
-    plt.title('AMT_CREDIT')
-    x.pyplot(fig)
-
-st.table(df_compare[feature_selection].round(2).transpose().astype('string')) 
-
-
-st.title("Let's create a table!")
-j=0
-cols = st.columns(5)
-for i in range(1, 10):
-    with cols[j]:
-        fig = plt.figure(figsize=(3,4))
-        sns.barplot(x=df_compare.index, y='AMT_CREDIT', data=df_compare)
-        plt.title('AMT_CREDIT')
-        st.pyplot(fig)
-    if j>3:
-        j=0
-    else:
-        j=j+1
+    # display a table of the features selected to compare        
+    st.markdown("<h6 style='text-align: left; color: black;'><u>Table of data</u></h6>", unsafe_allow_html=True)
+    st.table(df_compare[feature_selection].round(2).transpose().astype('string')) 
