@@ -85,7 +85,7 @@ cbx_compare = st.sidebar.checkbox('Customer compare')
 if not cbx_data and not cbx_proba and not cbx_compare:
 
     st.markdown("<h5 style='text-align: left; color: black;'><u>How to use this dashboard :</u></h5>", unsafe_allow_html=True)
-    st.markdown('Select a **CustomerID**')
+    st.markdown('Select a **CustomerID** and tick a **checkbox**')
     st.markdown('<br></br>', unsafe_allow_html=True)
     st.markdown('Information available with the different checkbox :')
     
@@ -103,7 +103,12 @@ if not cbx_data and not cbx_proba and not cbx_compare:
 if cbx_proba:
     st.markdown("<h2 style='text-align: left; color: black;'>Customer prediction :</h2>", unsafe_allow_html=True)
 
-    st.markdown('CustomerID selected : **'+ str(customerid) + '**')  
+    st.markdown('CustomerID selected : **'+ str(customerid) + '**')
+    
+#     # from the flask api
+#     response = requests.get("https://ocp7implementezunmodele.herokuapp.com/"+ str(customerid))
+#     data_table = pd.DataFrame([response.json()])
+#     st.write('Probability of default : ', data_table['Probability'][0])
     
     # use plotly to display a gauge for probability of the customer
     fig = go.Figure(go.Indicator(
@@ -166,15 +171,18 @@ if cbx_proba:
 # display datas linked to checkbox cbx_proba
 if cbx_data:    
     st.markdown("<h2 style='text-align: left; color: black;'>Customer data :</h2>", unsafe_allow_html=True)
+
+    # create a slider to select a number of features to compare
+    nb_feature = st.slider('Select a number of features to display', 0, customer_data.shape[1], 10)
     
     # use a multiselection to select features to display
     feature_selection = st.multiselect(
-        'Select features to display', features, features[:10])
+        'Select features to display', features, features[:nb_feature])
     
     # transpose dataframe in vertical for a better view
-    customer_data_transposed = customer_data[feature_selection].reset_index().transpose()
+    customer_data_transposed = customer_data[feature_selection].round(2).reset_index().transpose()
     # display datas of the customer
-    st.table(customer_data_transposed.round(2).rename(columns={0: "Value"}).astype('string'))
+    st.table(customer_data_transposed.rename(columns={0: "Value"}).astype('string'))
     
     # display number of missing values
     nb_missing_values = sum(customer_data.isnull().values.any(axis=0))
@@ -221,6 +229,7 @@ if cbx_compare:
     # create a data frame with datas of customer and data for customer with default and customer non default
     df_compare = pd.concat([customer_data, df_mean_mode]).iloc[:, :-1].rename(index={0:"Non-default", 1:"Default", customerid:"Customer"})
     
+    # create a slider to select a number of features to compare
     nb_feature_to_compare = st.slider('Select a number of features to compare', 0, df_compare.shape[1], 6)
     
     # use a multiselection to select features to compare
@@ -229,30 +238,38 @@ if cbx_compare:
     
     # Display features selected to compare in a number of columns
     nb_columns = 4
-    cols = st.columns(nb_columns)
+    col_quantitative = st.columns(nb_columns)
+    col_categorical = st.columns(nb_columns)
+
     
     # use to create a new line
-    j=0    
+    j=0
+    k=0
     for i in feature_selection:
-        with cols[j]:
-            # if feature is an object display in a table
-            if df_compare[i].dtype=='object':
+        # to separate features quantitative and features categorical
+        if df_compare[i].dtype!='object':
+            with st.container():
+                with col_quantitative[j]:                
+                    fig = plt.figure(figsize=(3,3.5))
+                    sns.barplot(x=df_compare.index, y=i, data=df_compare)
+                    plt.xlabel(None)
+                    plt.title(i)
+                    st.pyplot(fig)      
+                if j>nb_columns-2:
+                    j=0
+                    st.markdown('')
+                else:
+                    j=j+1
+        else:   
+            with col_categorical[k]:
                 st.table(df_compare[i])
-            # if feature is not an object display in a barplot
+            if k>nb_columns-2:
+                k=0
+                st.markdown('')
             else:
-                fig = plt.figure(figsize=(3,1.5))
-                sns.barplot(y=df_compare.index, x=i, data=df_compare)
-                plt.xlabel(None)
-                plt.title(i)
-                st.pyplot(fig)            
-        if j>nb_columns-2:
-            j=0
-            st.markdown('')
-        else:
-            j=j+1
-
+                k=k+1         
+     
     # display a table of the features selected to compare        
-    st.markdown("<h6 style='text-align: left; color: black;'><u>Table of data</u></h6>", unsafe_allow_html=True)
+    st.markdown("<h6 style='text-align: left; color: black;'><u>Table of features selected</u></h6>", unsafe_allow_html=True)
     st.table(df_compare[feature_selection].round(2).transpose().astype('string')) 
-    
-   
+ 

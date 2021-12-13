@@ -2,13 +2,9 @@
 
 # Library imports
 import uvicorn
-import gunicorn
 from fastapi import FastAPI
-from pydantic import BaseModel
-import numpy as np
 import pickle
 import pandas as pd
-from imblearn.pipeline import Pipeline as imbpipeline
 
 
 # Create app and model objects
@@ -27,7 +23,7 @@ threshold_optimized = 0.320
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome on my API"}
+    return {"message": "Welcome on the API of Prêt à dépenser"}
 
 @app.get('/{customerID}')
 def prediction(customerID: int):
