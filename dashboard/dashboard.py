@@ -38,7 +38,7 @@ pickle_shap_values = open(Path(__file__).parents[1] /'explainer/shap_values.pkl'
 shap_values=pickle.load(pickle_shap_values)
 
 # load logo
-logo = Image.open(Path(__file__).parents[1] /'datas./logo.png')
+logo = Image.open(Path(__file__).parents[1] /'datas/logo.png')
 
 ######################################################################################################################################## 
 
