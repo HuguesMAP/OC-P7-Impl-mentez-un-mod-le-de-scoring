@@ -12,7 +12,6 @@ import shap
 import matplotlib.pyplot as plt
 from PIL import Image
 import plotly.graph_objects as go
-
 from pathlib import Path
 
 
@@ -21,24 +20,24 @@ from pathlib import Path
 # data of the customers
 df_data = pd.read_csv(Path(__file__).parents[1] / 'datas/X_sample.csv', index_col='SK_ID_CURR')
 # data of the customers preprocessed (imputed, normalized)
-df_data_preproc = pd.read_csv(Path(__file__).parents[1] /'datas/X_sample_preproc.csv', index_col='SK_ID_CURR')
+df_data_preproc = pd.read_csv(Path(__file__).parents[1] / 'datas/X_sample_preproc.csv', index_col='SK_ID_CURR')
 # mean and mode of the features
-df_mean_mode = pd.read_csv(Path(__file__).parents[1] /'datas/X_sample_mean_mode.csv',index_col='prediction')
+df_mean_mode = pd.read_csv(Path(__file__).parents[1] / 'datas/X_sample_mean_mode.csv',index_col='prediction')
 
 # load model
-pickle_classifier = open(Path(__file__).parents[1] /'models/model_classifier.pkl','rb')
+pickle_classifier = open(Path(__file__).parents[1] / 'models/model_classifier.pkl','rb')
 classifier=pickle.load(pickle_classifier)
 
 # load explainer
-pickle_explainer = open(Path(__file__).parents[1] /'explainer/explainer.pkl','rb')
+pickle_explainer = open(Path(__file__).parents[1] / 'explainer/explainer.pkl','rb')
 explainer=pickle.load(pickle_explainer)
 
 # load shap_values
-pickle_shap_values = open(Path(__file__).parents[1] /'explainer/shap_values.pkl','rb')
+pickle_shap_values = open(Path(__file__).parents[1] / 'explainer/shap_values.pkl','rb')
 shap_values=pickle.load(pickle_shap_values)
 
 # load logo
-logo = Image.open(Path(__file__).parents[1] /'datas/logo.png')
+logo = Image.open(Path(__file__).parents[1] / 'datas/logo.png')
 
 ######################################################################################################################################## 
 
