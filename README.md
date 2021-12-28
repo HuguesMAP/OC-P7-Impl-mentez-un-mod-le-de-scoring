@@ -8,9 +8,9 @@
 ## Data
 The data used for this project are available on kaggle : https://www.kaggle.com/c/home-credit-default-risk/data
 
-The project was developped with JupyterNotebook and Python 3.8
+The project was developped with Jupyter Notebook and Python 3.8
 
-## Files and folder explanation
+## Files and folders explanation
 * Folder **API** : API devlopped
 * Folder **dashboard** : interactive dashboard devlopped with the requirement packages
 * Folder **datas** : datas of customers used in API and dashboard
