@@ -1,4 +1,4 @@
-# OC - Projet 7 - Implémentez un modèle de scoring
+# OC - Projet 7 - Implémentation d’un modèle de scoring.
 
 ## Objectives
 
