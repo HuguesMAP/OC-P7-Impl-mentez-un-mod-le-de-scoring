@@ -1,4 +1,4 @@
-# OC - Projet 7 - Implémentation d’un modèle de scoring.
+# OC - Projet 7 - Implémentation d’un modèle de scoring (Implementation of a scoring model)
 
 ## Objectives
 
@@ -20,6 +20,7 @@ The project was developped with Jupyter Notebook and Python 3.8
 * File **Projet 7 - Implémentez un modèle de scoring - Exploration.ipynb** : Notebook used for the data exploration and feature engineering
 * File **Projet 7 - Implémentez un modèle de scoring - Modélisation.ipynb** : Notebook used for the modelisation 
 * File **requirements.txt** : file for the API requirement packages
+* File **P7_04_Support.pptx** : Defense presentation
 
 ## API & Dashboard deployment
 * API : deployed with Heroku, available with the link: https://ocp7implementezunmodele.herokuapp.com/
